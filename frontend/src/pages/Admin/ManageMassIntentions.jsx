@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import styles from "../../styles/Admin/AdminPage.module.css";
 import modal from "../../styles/Admin/ManageBookings.module.css";
 import { useToast } from "../../context/ToastContext";
@@ -34,6 +36,80 @@ const formatDateLong = (d) => {
     year: "numeric", month: "long", day: "numeric",
   });
 };
+
+// ── PDF export for a single mass schedule group ───────────────────────────
+function exportGroupToPDF(group) {
+  const doc       = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  const dateDisplay = formatDateLong(group.date);
+  const timeDisplay = formatTime(group.time);
+
+  // Build a clean filename: "mass-intentions-May-14-2026-6PM.pdf"
+  const dateObj   = new Date(group.date);
+  const monthName = MONTH_NAMES[dateObj.getUTCMonth()];
+  const day       = dateObj.getUTCDate();
+  const year      = dateObj.getUTCFullYear();
+  const [h, m]    = group.time.split(":");
+  const hr        = parseInt(h, 10);
+  const minPart   = m !== "00" ? `-${m}` : "";
+  const timeSlug  = `${hr % 12 || 12}${minPart}${hr >= 12 ? "PM" : "AM"}`;
+  const filename  = `mass-intentions-${monthName}-${day}-${year}-${timeSlug}.pdf`;
+
+  // ── Header block ──────────────────────────────────────────────────────────
+  doc.setFontSize(20);
+  doc.setTextColor(30, 64, 175);
+  doc.text("FaithLink", pageWidth / 2, 46, { align: "center" });
+
+  doc.setFontSize(13);
+  doc.setTextColor(30, 30, 30);
+  doc.text("Mass Intentions List", pageWidth / 2, 66, { align: "center" });
+
+  doc.setFontSize(10);
+  doc.setTextColor(71, 85, 105);
+  doc.text(
+    `Date: ${dateDisplay}   ·   Time: ${timeDisplay}`,
+    pageWidth / 2, 84, { align: "center" }
+  );
+
+  doc.setFontSize(9);
+  doc.setTextColor(148, 163, 184);
+  doc.text(
+    `Status: ${group.allDone ? "Completed" : "Scheduled"}   ·   ${group.intentions.length} intention${group.intentions.length !== 1 ? "s" : ""}`,
+    pageWidth / 2, 99, { align: "center" }
+  );
+
+  // Divider
+  doc.setDrawColor(200, 210, 230);
+  doc.line(40, 109, pageWidth - 40, 109);
+
+  // ── Table ─────────────────────────────────────────────────────────────────
+  autoTable(doc, {
+    startY: 118,
+    head: [["#", "Requested By", "Intention Type", "Intention For", "Notes"]],
+    body: group.intentions.map((i, idx) => {
+      const data = i.sacramentSpecificData || {};
+      return [
+        idx + 1,
+        data.requesterName || "—",
+        data.intentionType || "—",
+        data.intentionFor  || "—",
+        i.message          || "—",
+      ];
+    }),
+    styles:              { fontSize: 9, cellPadding: 6, valign: "top" },
+    headStyles:          { fillColor: [30, 64, 175], textColor: 255, fontStyle: "bold" },
+    alternateRowStyles:  { fillColor: [239, 246, 255] },
+    columnStyles: {
+      0: { cellWidth: 28, halign: "center", textColor: [148, 163, 184] },
+      2: { cellWidth: 90 },
+      4: { fontStyle: "italic", textColor: [100, 116, 139] },
+    },
+    margin: { left: 40, right: 40 },
+  });
+
+  doc.save(filename);
+}
 
 // ── Build a flat lookup map: "YYYY-MM-DD||HH:MM" → group object ───────────
 const buildIntentionMap = (list) => {
@@ -226,7 +302,7 @@ export default function ManageMassIntentions() {
             }}
           >‹</button>
 
-          <span style={{ color: "#fff", fontWeight: 700, fontSize: "1.05rem", letterSpacing: "0.3px" }}>
+          <span className={styles.calHeaderTitle} style={{ fontWeight: 700, fontSize: "1.05rem", letterSpacing: "0.3px" }}>
             {MONTH_NAMES[calMonth]} {calYear}
           </span>
 
@@ -463,14 +539,15 @@ export default function ManageMassIntentions() {
             {/* Panel body */}
             <div className={modal.panelBody}>
 
-              {/* Mark as Done button */}
-              {!panelGroup.allDone && (
-                <div style={{ marginBottom: 18 }}>
+              {/* Action buttons row */}
+              <div style={{ display: "flex", gap: 10, marginBottom: 18, flexWrap: "wrap" }}>
+                {/* Mark as Done button */}
+                {!panelGroup.allDone && (
                   <button
                     disabled={marking}
                     onClick={() => markGroupDone(panelGroup)}
                     style={{
-                      width: "100%", padding: "11px",
+                      flex: 1, minWidth: 160, padding: "11px",
                       borderRadius: 8, border: "none",
                       background: marking
                         ? "#94a3b8"
@@ -486,8 +563,27 @@ export default function ManageMassIntentions() {
                       : `Mark All ${panelGroup.intentions.length} Intention${panelGroup.intentions.length !== 1 ? "s" : ""} as Done`
                     }
                   </button>
-                </div>
-              )}
+                )}
+
+                {/* Export PDF button — always visible */}
+                <button
+                  onClick={() => exportGroupToPDF(panelGroup)}
+                  style={{
+                    flex: panelGroup.allDone ? 1 : "0 0 auto",
+                    padding: "11px 18px",
+                    borderRadius: 8,
+                    border: "1.5px solid #dc2626",
+                    background: "#fff",
+                    color: "#dc2626",
+                    fontSize: "0.875rem", fontWeight: 600,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  ↓ Export PDF
+                </button>
+              </div>
 
               {/* Intentions count label */}
               <div style={{

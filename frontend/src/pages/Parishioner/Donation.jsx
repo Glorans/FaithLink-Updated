@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { QRCodeSVG } from "qrcode.react";
-import { ArrowLeft } from "lucide-react";
+import { Home } from "lucide-react";
 import "../../styles/Parishioner/Donation.css";
 import { useToast } from "../../context/ToastContext";
 
@@ -76,7 +76,7 @@ function Donation() {
     <div className="donation-screen">
       <div className="donation-header">
         <button className="back-btn" onClick={() => goBack("/dashboard")}>
-          <ArrowLeft size={18} strokeWidth={2.5} />
+          <Home size={18} strokeWidth={2.5} />
         </button>
 
         <div className="donation-heart">♡</div>
@@ -180,7 +180,7 @@ function Donation() {
             <div className="method-icon">▯</div>
             <div>
               <strong>GCash</strong>
-              <p>09123456789</p>
+              <p>09336943694</p>
             </div>
             <span>{method === "GCash" ? "✓" : ""}</span>
           </div>
@@ -205,8 +205,8 @@ function Donation() {
     src="/images/instapay-qr.png"
     alt="Instapay QR"
     style={{
-      width: "100%",
-      maxWidth: "320px",
+      width: "min(340px, 90vw)",
+      maxWidth: "100%",
       aspectRatio: "1 / 1",
       objectFit: "contain",
       display: "block",
@@ -218,7 +218,7 @@ function Donation() {
             <div className="wallet-row">
               <div>
                 <small>Wallet Number</small>
-                <strong>{method === "GCash" ? "09123456789" : "09187654321"}</strong>
+                <strong>{method === "GCash" ? "09336943694" : "09187654321"}</strong>
               </div>
               <button type="button">Copy</button>
             </div>

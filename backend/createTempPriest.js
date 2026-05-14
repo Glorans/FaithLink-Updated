@@ -10,7 +10,7 @@ const User = require("./models/User");
 const TEMP_PRIEST = {
   fullName: "Temp Priest",
   email:    "priest@faithlink.com",
-  password: "FaithLink123",
+  password: "priest123",
   role:     "priest",
 };
 
@@ -21,23 +21,26 @@ async function createTempPriest() {
     });
     console.log("Connected to MongoDB Atlas");
 
+    const hashedPassword = await bcrypt.hash(TEMP_PRIEST.password, 12);
+
     const existing = await User.findOne({ email: TEMP_PRIEST.email });
 
     if (existing) {
-      console.log("Account already exists:", TEMP_PRIEST.email);
-      return;
+      await User.updateOne(
+        { email: TEMP_PRIEST.email },
+        { password: hashedPassword, role: TEMP_PRIEST.role }
+      );
+      console.log("Priest account updated with new credentials");
+    } else {
+      await User.create({
+        fullName: TEMP_PRIEST.fullName,
+        email:    TEMP_PRIEST.email,
+        password: hashedPassword,
+        role:     TEMP_PRIEST.role,
+      });
+      console.log("Priest account created successfully");
     }
 
-    const hashedPassword = await bcrypt.hash(TEMP_PRIEST.password, 12);
-
-    await User.create({
-      fullName: TEMP_PRIEST.fullName,
-      email:    TEMP_PRIEST.email,
-      password: hashedPassword,
-      role:     TEMP_PRIEST.role,
-    });
-
-    console.log("Temporary priest account created successfully");
     console.log(`  Full Name: ${TEMP_PRIEST.fullName}`);
     console.log(`  Email    : ${TEMP_PRIEST.email}`);
     console.log(`  Password : ${TEMP_PRIEST.password}`);

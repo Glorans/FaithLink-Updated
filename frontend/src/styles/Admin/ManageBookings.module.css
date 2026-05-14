@@ -175,7 +175,7 @@
   flex: 1;
   padding: 10px;
   background-color: #16a34a;
-  color: #ffffff;
+  color: #ffffff !important;
   border: none;
   border-radius: 8px;
   font-size: 0.875rem;
@@ -244,7 +244,7 @@
 .filterBtnActive {
   background-color: #1a2e4a;
   border-color: #1a2e4a;
-  color: #ffffff;
+  color: #ffffff !important;
 }
 
 /* ─────────────────────────────────────────────
@@ -530,7 +530,7 @@
 
 .reviewApproveBtn {
   background: #16a34a;
-  color: #ffffff;
+  color: #ffffff !important;
 }
 
 .reviewApproveBtn:hover {
@@ -539,7 +539,7 @@
 
 .reviewRejectBtn {
   background: #dc2626;
-  color: #ffffff;
+  color: #ffffff !important;
 }
 
 .reviewRejectBtn:hover {
@@ -582,12 +582,12 @@
 
 .scheduleBtn {
   background: #2563eb;
-  color: #ffffff;
+  color: #ffffff !important;
 }
 
 .completeBtn {
   background: #16a34a;
-  color: #ffffff;
+  color: #ffffff !important;
 }
 
 .scheduleBtn:hover {
@@ -706,7 +706,7 @@
 
 .scheduleSaveBtn {
   background: #2563eb;
-  color: #ffffff;
+  color: #ffffff !important;
 }
 
 .scheduleSaveBtn:disabled {
@@ -792,7 +792,7 @@
 
 .confirmBtn {
   background: #2563eb;
-  color: #ffffff;
+  color: #ffffff !important;
 }
 
 .cancelBtn {

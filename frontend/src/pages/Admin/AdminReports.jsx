@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import styles from "../../styles/Admin/AdminPage.module.css";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -30,6 +32,47 @@ function exportToCSV(data, columns, filename) {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+// ── PDF export utility ────────────────────────────────────────────────────────
+function exportToPDF(data, columns, title, filename) {
+  if (!data || data.length === 0) return;
+
+  const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const generated = new Date().toLocaleDateString("en-PH", {
+    year: "numeric", month: "long", day: "numeric",
+  });
+
+  // Header block
+  doc.setFontSize(18);
+  doc.setTextColor(30, 64, 175);
+  doc.text("FaithLink Parish Management", pageWidth / 2, 40, { align: "center" });
+
+  doc.setFontSize(13);
+  doc.setTextColor(30, 30, 30);
+  doc.text(title, pageWidth / 2, 60, { align: "center" });
+
+  doc.setFontSize(9);
+  doc.setTextColor(100, 116, 139);
+  doc.text(`Generated: ${generated}`, pageWidth / 2, 76, { align: "center" });
+
+  // Divider
+  doc.setDrawColor(200, 210, 230);
+  doc.line(40, 84, pageWidth - 40, 84);
+
+  // Table
+  autoTable(doc, {
+    startY: 92,
+    head: [columns.map((c) => c.label)],
+    body: data.map((row) => columns.map((c) => row[c.key] ?? "—")),
+    styles: { fontSize: 9, cellPadding: 5 },
+    headStyles: { fillColor: [30, 64, 175], textColor: 255, fontStyle: "bold" },
+    alternateRowStyles: { fillColor: [239, 246, 255] },
+    margin: { left: 40, right: 40 },
+  });
+
+  doc.save(filename);
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -127,6 +170,15 @@ const CSV_FILENAMES = {
   "annual":             "annual-parish-report.csv",
 };
 
+const PDF_FILENAMES = {
+  "sacrament-bookings": "sacrament-bookings-report.pdf",
+  "donations":          "donation-summary-report.pdf",
+  "parishioners":       "parishioner-registry.pdf",
+  "livestream":         "livestream-analytics.pdf",
+  "mass-intentions":    "mass-intentions-log.pdf",
+  "annual":             "annual-parish-report.pdf",
+};
+
 // ── Section heading used twice on the page ────────────────────────────────────
 function SectionHeading({ title, subtitle }) {
   return (
@@ -147,10 +199,11 @@ export default function AdminReports() {
   const [fetchError, setFetchError] = useState("");
 
   // Report generation state
-  const [generatingId, setGeneratingId] = useState(null);
-  const [exportingId, setExportingId]   = useState(null);
-  const [reportData, setReportData]     = useState(null); // { type, data, title }
-  const [reportError, setReportError]   = useState("");
+  const [generatingId, setGeneratingId]     = useState(null);
+  const [exportingId, setExportingId]       = useState(null);
+  const [pdfExportingId, setPdfExportingId] = useState(null);
+  const [reportData, setReportData]         = useState(null); // { type, data, title }
+  const [reportError, setReportError]       = useState("");
 
   const token = localStorage.getItem("token");
 
@@ -201,7 +254,7 @@ export default function AdminReports() {
     }
   };
 
-  // ── Export handler ─────────────────────────────────────────────────────────
+  // ── Export CSV handler ─────────────────────────────────────────────────────
   const handleExport = async (card) => {
     setExportingId(card.id);
     try {
@@ -216,6 +269,24 @@ export default function AdminReports() {
       // no-op — export silently fails; user can retry
     } finally {
       setExportingId(null);
+    }
+  };
+
+  // ── Export PDF handler ─────────────────────────────────────────────────────
+  const handleExportPDF = async (card) => {
+    setPdfExportingId(card.id);
+    try {
+      const res = await axios.get(
+        `http://localhost:5000/api/admin/reports/${card.type}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const columns  = REPORT_COLUMNS[card.type] ?? [];
+      const filename = PDF_FILENAMES[card.type]  ?? `${card.type}-report.pdf`;
+      exportToPDF(res.data.data, columns, card.title, filename);
+    } catch {
+      // no-op — export silently fails; user can retry
+    } finally {
+      setPdfExportingId(null);
     }
   };
 
@@ -401,16 +472,24 @@ export default function AdminReports() {
                 className={styles.actionBtn}
                 style={{ color: r.accent, borderColor: r.accent }}
                 onClick={() => handleGenerate(r)}
-                disabled={generatingId === r.id || exportingId === r.id}
+                disabled={generatingId === r.id || exportingId === r.id || pdfExportingId === r.id}
               >
                 {generatingId === r.id ? "Generating…" : "Generate"}
               </button>
               <button
                 className={styles.actionBtn}
                 onClick={() => handleExport(r)}
-                disabled={exportingId === r.id || generatingId === r.id}
+                disabled={exportingId === r.id || generatingId === r.id || pdfExportingId === r.id}
               >
-                {exportingId === r.id ? "Exporting…" : "Export"}
+                {exportingId === r.id ? "Exporting…" : "CSV"}
+              </button>
+              <button
+                className={styles.actionBtn}
+                style={{ color: "#dc2626", borderColor: "#dc2626" }}
+                onClick={() => handleExportPDF(r)}
+                disabled={pdfExportingId === r.id || generatingId === r.id || exportingId === r.id}
+              >
+                {pdfExportingId === r.id ? "Exporting…" : "PDF"}
               </button>
             </div>
           </div>

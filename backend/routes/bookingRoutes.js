@@ -292,9 +292,13 @@ router.get("/dashboard/counts", protect, adminOnly, async (req, res) => {
 
 // GET /api/bookings/admin/approved — admin only
 // Returns approved bookings for priest assignment.
+// Mass Intentions are excluded because they are handled by the calendar system.
 router.get("/admin/approved", protect, adminOnly, async (req, res) => {
   try {
-    const bookings = await Booking.find({ status: "approved" })
+    const bookings = await Booking.find({
+      status: "approved",
+      sacramentType: { $ne: "Mass Intentions" },
+    })
       .populate("parishioner", "fullName email role")
       .populate("assignedPriest", "fullName email role")
       .sort({ preferredDate: 1 });
@@ -350,6 +354,7 @@ router.put("/:id/assign-priest", protect, adminOnly, async (req, res) => {
 
 // GET /api/bookings/priest/approved — priest only
 // Returns only bookings assigned to the logged-in priest.
+// Mass Intentions are excluded — they are managed via the calendar system.
 router.get("/priest/approved", protect, async (req, res) => {
   try {
     if (req.user.role !== "priest") {
@@ -359,6 +364,7 @@ router.get("/priest/approved", protect, async (req, res) => {
     const bookings = await Booking.find({
       status: "approved",
       assignedPriest: req.user.id,
+      sacramentType: { $ne: "Mass Intentions" },
     })
       .populate("parishioner", "fullName email")
       .populate("assignedPriest", "fullName email")

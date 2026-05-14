@@ -13,6 +13,8 @@
     "@livekit/components-react": "^2.9.21",
     "@livekit/components-styles": "^1.2.0",
     "axios": "^1.16.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.7",
     "livekit-client": "^2.18.9",
     "lucide-react": "^1.14.0",
     "qrcode.react": "^4.2.0",

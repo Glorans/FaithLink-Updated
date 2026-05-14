@@ -78,21 +78,29 @@ function AssignPriest() {
     }
   };
 
-  const filteredBookings = useMemo(() => {
-    return bookings.filter((booking) => {
-      const keyword = searchTerm.toLowerCase();
+  // Strip Mass Intentions defensively (backend already excludes them, but guard
+  // against stale data if the server hasn't been restarted after that change).
+  // This is the single source of truth for all stat cards AND the table.
+  const sacramentBookings = useMemo(
+    () => bookings.filter((b) => b.sacramentType !== "Mass Intentions"),
+    [bookings]
+  );
 
-      return (
+  const filteredBookings = useMemo(() => {
+    const keyword = searchTerm.toLowerCase();
+    if (!keyword) return sacramentBookings;
+
+    return sacramentBookings.filter(
+      (booking) =>
         booking.parishioner?.fullName?.toLowerCase().includes(keyword) ||
         booking.sacramentType?.toLowerCase().includes(keyword) ||
         booking.assignedPriest?.fullName?.toLowerCase().includes(keyword)
-      );
-    });
-  }, [bookings, searchTerm]);
+    );
+  }, [sacramentBookings, searchTerm]);
 
-  const pendingAssignments = bookings.filter((b) => !b.assignedPriest).length;
-  const confirmedAssignments = bookings.filter(
-  (b) => b.priestConfirmationStatus === "accepted"
+  const pendingAssignments   = sacramentBookings.filter((b) => !b.assignedPriest).length;
+  const confirmedAssignments = sacramentBookings.filter(
+    (b) => b.priestConfirmationStatus === "accepted"
   ).length;
 
   const formatDate = (date) => {
@@ -119,7 +127,7 @@ function AssignPriest() {
       <div className="assign-hero">
         <div>
           <h1>Assign Priest</h1>
-          <p>Assign priests to approved sacrament bookings and Mass Intentions.</p>
+          <p>Assign priests to approved sacrament bookings.</p>
         </div>
 
         <div className="church-illustration">
@@ -134,7 +142,7 @@ function AssignPriest() {
           </div>
           <div>
             <p>Approved Bookings</p>
-            <h2>{bookings.length}</h2>
+            <h2>{sacramentBookings.length}</h2>
             <span>Ready for assignment</span>
           </div>
         </div>
@@ -206,7 +214,7 @@ function AssignPriest() {
             <thead>
               <tr>
                 <th>Parishioner</th>
-                <th>Sacrament / Intention</th>
+                <th>Sacrament</th>
                 <th>Date & Time</th>
                 <th>Status</th>
                 <th>Assigned Priest</th>
@@ -310,7 +318,7 @@ function AssignPriest() {
         </div>
 
         <div className="assign-footer">
-          <p>Showing {filteredBookings.length} of {bookings.length} results</p>
+          <p>Showing {filteredBookings.length} of {sacramentBookings.length} results</p>
         </div>
       </div>
     </div>

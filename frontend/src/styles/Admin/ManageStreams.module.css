@@ -4,7 +4,7 @@
 .addStreamBtn {
   padding: 8px 16px;
   background-color: #5B8DEF;
-  color: #ffffff;
+  color: #ffffff !important;
   border: none;
   border-radius: 8px;
   font-size: 0.875rem;
@@ -75,7 +75,7 @@
   gap: 4px;
   padding: 7px 14px;
   background: #dc2626;
-  color: white;
+  color: #ffffff !important;
   border: none;
   border-radius: 8px;
   font-size: 0.8rem;
@@ -337,7 +337,7 @@
   gap: 3px;
   padding: 5px 11px;
   background: #16a34a;
-  color: white;
+  color: #ffffff !important;
   border: none;
   border-radius: 6px;
   font-size: 0.78rem;
@@ -355,7 +355,7 @@
   gap: 3px;
   padding: 5px 11px;
   background: #dc2626;
-  color: white;
+  color: #ffffff !important;
   border: none;
   border-radius: 6px;
   font-size: 0.78rem;
@@ -401,7 +401,7 @@
   gap: 3px;
   padding: 5px 11px;
   background: #f59e0b;
-  color: white;
+  color: #ffffff !important;
   border: none;
   border-radius: 6px;
   font-size: 0.78rem;
@@ -434,17 +434,7 @@
   font-weight: 700;
 }
 
-/* FORCE BLACK TEXT FIX */
-:global(.admin-content),
-:global(.admin-content *),
-:global(main),
-:global(main *),
-:global(input),
-:global(select),
-:global(textarea),
-:global(label) {
-  color: #111827 !important;
-}
+
 
 :global(input),
 :global(select),

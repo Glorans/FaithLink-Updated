@@ -1,6 +1,6 @@
 .grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px;
 }
 
@@ -91,7 +91,7 @@
 /* Save button */
 .saveBtn {
   background: #1a2e4a;
-  color: #fff;
+  color: #fff !important;
   border: none;
   padding: 11px 28px;
   border-radius: 9px;
@@ -104,6 +104,6 @@
 .saveBtn:hover { background: #243d5e; }
 
 /* Responsive */
-@media (max-width: 700px) {
+@media (max-width: 680px) {
   .grid { grid-template-columns: 1fr; }
 }
